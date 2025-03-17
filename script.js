@@ -18,6 +18,10 @@ let bird = {
   frame: 0
 };
 
+// Retrieve gamesPlayed count from localStorage
+let gamesPlayed = localStorage.getItem("gamesPlayed") ? parseInt(localStorage.getItem("gamesPlayed")) : 0;
+
+
 // Pipes & Coins
 let pipes = [];
 let coins = [];
@@ -41,8 +45,8 @@ const belts = [
 ];
 
 
-  let playerBelt = belts[0]; // Start with White Belt
-  let lastAwardedBelt = belts[0];
+let playerBelt = belts[0]; // Start with White Belt
+let lastAwardedBelt = belts[0];
 //Reviving 
 let isReviving = false;
 let reviveTimer = 0;
@@ -63,8 +67,8 @@ window.onload = function () {
 // Function to make the bird jump
 function jump() {
   if (!gameOver) {
-    bird.velocity = bird.jump;
     flapSound.play();
+    bird.velocity = bird.jump;
   }
 }
 
@@ -143,8 +147,8 @@ function update() {
       bird.y < coins[i].y + coins[i].height &&
       bird.y + bird.height > coins[i].y
     ) {
-      totalCoins += coins[i].value;
       coinSound.play();
+      totalCoins += coins[i].value;
       coins.splice(i, 1);
     }
 
@@ -161,10 +165,10 @@ function update() {
 function checkBeltUpgrade() {
   for (let i = belts.length - 1; i >= 0; i--) {
     if (score >= belts[i].score && belts[i].score > lastAwardedBelt.score) {
+      beltUpSound.play();
       lastAwardedBelt = belts[i];
       playerBelt = belts[i];
       localStorage.setItem("playerBeltIndex", i); // Save belt progress
-      beltUpSound.play();
       animateBeltUpgrade();
       break;
     }
@@ -173,11 +177,9 @@ function checkBeltUpgrade() {
 
 function animateBeltUpgrade() {
   bird.color = playerBelt.color; // Change bird color to match new belt
-
   let opacity = 1;
   let interval = setInterval(() => {
     ctx.fillStyle = `rgba(0, 0, 0, ${opacity})`;
-
     ctx.font = "30px Arial";
     ctx.fillText(`Congratulations! ${lastAwardedBelt.name} Unlocked!`, 50, canvas.height / 2);
     opacity -= 0.02;
@@ -240,14 +242,36 @@ function draw() {
   
 }
 
+
+// Function to handle game over
 function endGame() {
-  gameOver = true;
   hitSound.play();
+  gameOver = true;
+
   if (score > bestScore) {
     bestScore = score;
     localStorage.setItem("bestScore", bestScore);
   }
 }
+
+// function endGame() {
+//   hitSound.play();
+//   gameOver = true;
+//   if (score > bestScore) {
+//     bestScore = score;
+//     localStorage.setItem("bestScore", bestScore);
+//   }
+// }
+function endGame() {
+  hitSound.play();
+  gameOver = true;
+
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem("bestScore", bestScore);
+  }
+}
+
 
 canvas.addEventListener("click", function (event) {
   if (gameOver) {
@@ -281,18 +305,39 @@ function reviveGame() {
   reviveTimer = 1; // Start the 3-second grace period
 }
 
+// function resetGame() {
+//   bird.y = canvas.height / 2;
+//   bird.velocity = 0;
+//   pipes = [];
+//   coins = [];
+//   frame = 0;
+//   score = 0;
+//   pipeCount = 0;
+//   gameOver = false;
+//   lastAwardedBelt = belts[0];
+//   playerBelt = belts[0];
+// }
 function resetGame() {
   bird.y = canvas.height / 2;
   bird.velocity = 0;
   pipes = [];
   coins = [];
-  frame = 0;
   score = 0;
-  pipeCount = 0;
   gameOver = false;
-  lastAwardedBelt = belts[0];
-  playerBelt = belts[0];
+  isReviving = false;
+  reviveTimer = 0;
+
+  // Increment games played
+  gamesPlayed++;
+  localStorage.setItem("gamesPlayed", gamesPlayed);
+
+  // Reset totalCoins to 0 after every 40 games
+  if (gamesPlayed % 10 === 0) {
+    totalCoins = 0;
+    localStorage.setItem("totalCoins", totalCoins);
+  }
 }
+
 
 function gameLoop() {
   update();
